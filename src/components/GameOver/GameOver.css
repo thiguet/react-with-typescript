@@ -1,0 +1,21 @@
+.heading {
+    color: #333;
+}
+
+.btn {
+    padding: 10px;
+    border: none;
+    background: none;
+    border: 1px solid #333;
+    cursor: pointer;
+    color: #333;
+    font-weight: 700;
+    font-size: 14px;
+    border-radius: 5px;
+    transition: all 0.1s ease-in;
+}
+
+.btn:hover,
+.btn:focus {
+    transform: translateY(-4px);
+}

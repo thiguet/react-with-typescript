@@ -1,0 +1,16 @@
+.Square {
+    width: 20px;
+    height: 20px;
+    background-color: black;
+    border-radius: 20%;
+    opacity: 0.5;
+    transition: all 0.3s ease;
+}
+
+.Square.Snake {
+    background-color: blueviolet;
+}
+
+.Square.Food {
+    background-color: green;
+}
