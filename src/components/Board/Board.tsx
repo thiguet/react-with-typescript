@@ -1,6 +1,6 @@
-import { useCallback, useContext, useEffect, useState } from 'react';
+import { useContext, useEffect, useState } from 'react';
 import './Board.css';
-import { GRID_SIZE, Status, Direction, GameMatriz, INITIAL_POINTS, Snake, Coordinates } from '../../consts';
+import { Status, Direction, INITIAL_POINTS, Coordinates } from '../../consts';
 import Row from '../Row/Row';
 import Column from '../Column/Column';
 import Square from '../Square/Square';
@@ -13,76 +13,50 @@ import { AppContext } from '../Game/Game';
 
 const { snake, food } = generateNewGame();
 
-const Board = () => {
-    const ctx = useContext(AppContext);
+const getNewDirection = ([x, y]: Coordinates, direction: Direction): Coordinates => {
+    switch (direction) {
+        case Direction.DOWN:
+            y++;
+            break;
+        case Direction.UP:
+            y--;
+            break;
+        case Direction.RIGHT:
+            x++;
+            break;
+        case Direction.LEFT:
+            x--;
+            break;
+    }
 
-    const [gameMatrix, setGameMatrix] = useState(
-        Array(GRID_SIZE)
-            .fill(null)
-            .map(() => Array(GRID_SIZE).fill(Status.EMPTY)) as GameMatriz
-    );
+    return [x, y];
+};
+
+const Board = () => {
+    const { state, dispatch } = useContext(AppContext);
+
     const [snakePos, setSnakePos] = useState(snake);
     const [foodPos, setFoodPos] = useState(food);
     const [snakeDirection, setSnakeDirection] = useState(Direction.UP);
 
     const [points, setPoints] = useState(INITIAL_POINTS);
+    const [removed, setRemoved] = useState<Coordinates>();
 
-    const getNewDirection = useCallback(
-        ([x, y]: Coordinates): Coordinates => {
-            switch (snakeDirection) {
-                case Direction.DOWN:
-                    y++;
-                    break;
-                case Direction.UP:
-                    y--;
-                    break;
-                case Direction.RIGHT:
-                    x++;
-                    break;
-                case Direction.LEFT:
-                    x--;
-                    break;
-            }
-
-            return [x, y];
-        },
-        [snakeDirection]
-    );
-
-    const updateSnakePos = (snake: Snake): Snake => {
-        const aux = snake.slice(0);
-        let [x, y] = getNewDirection(aux[0]);
-
-        // Clean empty spaces.
-        const removed = aux.pop()!;
-        const matrixAux = gameMatrix.slice(0);
-        matrixAux[removed[1]][removed[0]] = Status.EMPTY;
-        setGameMatrix(matrixAux);
-
-        aux.unshift([x, y]);
-        return aux;
-    };
+    useInterval(() => {
+        setSnakePos(snakePos => {
+            const aux = snakePos.slice(0);
+            let [x, y] = getNewDirection(aux[0], snakeDirection);
+            setRemoved(aux.pop()!);
+            aux.unshift([x, y]);
+            return aux;
+        });
+    }, 100);
 
     const direction = useArrowKeys();
 
     useEffect(() => {
         setSnakeDirection(direction);
-    }, [direction, snakePos]);
-
-    useInterval(() => {
-        setSnakePos(snakePos => updateSnakePos(snakePos));
-    }, 200);
-
-    useEffect(() => {
-        if (isGameOver(snakePos)) {
-            return ctx.dispatch({ type: ActionTypes.GAME_STATUS, isGameOver: true });
-        }
-        const aux = gameMatrix.slice(0);
-        snakePos.forEach(coord => {
-            aux[coord[1]][coord[0]] = Status.SNAKE;
-        });
-        setGameMatrix(aux);
-    }, [gameMatrix, snakePos, ctx]);
+    }, [direction]);
 
     useEffect(() => {
         const hasEaten = JSON.stringify(snakePos[0]) === JSON.stringify(foodPos);
@@ -90,27 +64,45 @@ const Board = () => {
         if (hasEaten) {
             setFoodPos(generateRandomFoodPos());
             setPoints(points + 1);
-
-            const aux = snakePos.slice(0);
-            aux.push(getNewDirection(snakePos[0]));
-            setSnakePos(aux);
+            setSnakePos([...snakePos.slice(0), getNewDirection(snakePos[0], snakeDirection)]);
         }
-    }, [foodPos, snakePos, points, getNewDirection]);
+    }, [foodPos, points, snakePos, snakeDirection]);
 
+    // Update Board
     useEffect(() => {
-        const aux = gameMatrix.slice(0);
+        if (isGameOver(snakePos)) {
+            return dispatch({
+                type: ActionTypes.GAME_STATUS,
+                isGameOver: true,
+            });
+        }
+
+        const aux = state.gameMatrix!.slice(0);
+
+        snakePos.forEach(([x, y]: Coordinates) => {
+            aux[y][x] = Status.SNAKE;
+        });
+
+        if (removed) {
+            aux[removed[1]][removed[0]] = Status.EMPTY;
+            setRemoved(undefined);
+        }
         aux[foodPos[1]][foodPos[0]] = Status.FOOD;
-        setGameMatrix(aux);
-    }, [foodPos, gameMatrix]);
+
+        dispatch({
+            type: ActionTypes.GAME_BOARD,
+            gameMatrix: aux,
+        });
+    }, [snakePos, foodPos, removed]);
 
     return (
         <div className="Board">
             <h1>Points: {points}</h1>{' '}
-            {gameMatrix.map((_, i) => (
+            {state.gameMatrix.map((_, i) => (
                 <Row key={i}>
-                    {gameMatrix[i].map((_, j) => (
+                    {state.gameMatrix[i].map((_, j) => (
                         <Column key={j}>
-                            <Square status={gameMatrix[i][j]} />
+                            <Square status={state.gameMatrix[i][j]} />
                         </Column>
                     ))}
                 </Row>

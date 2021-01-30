@@ -19,9 +19,10 @@ export type Snake = Coordinates[];
 
 export type Coordinates = [x: number, y: number];
 
-export type GameMatriz = number[][];
+export type GameMatrix = number[][];
 
 export interface GameProps {
     food: Coordinates;
     snake: Snake;
+    game: GameMatrix;
 }

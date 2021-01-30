@@ -1,21 +1,27 @@
 export interface State {
     isGameOver: boolean;
+    gameMatrix: number[][];
 }
 
 export enum ActionTypes {
     GAME_STATUS = 'GAME_STATUS',
+    GAME_BOARD = 'GAME_BOARD',
 }
 
-export interface Action extends State {
-    type: ActionTypes;
-}
+export type Action =
+    | { type: ActionTypes.GAME_BOARD; gameMatrix: State['gameMatrix'] }
+    | { type: ActionTypes.GAME_STATUS; isGameOver: State['isGameOver'] };
 
-export const initialGameState: State = { isGameOver: false };
+export const initialGameState: State = { isGameOver: false, gameMatrix: [][0] };
 
-export const gameReducer = (state: State = initialGameState, { type, isGameOver }: Action) => {
-    switch (type) {
+export const gameReducer = (state: State = initialGameState, action: Action) => {
+    switch (action.type) {
         case ActionTypes.GAME_STATUS:
+            const { isGameOver } = action;
             return { ...state, isGameOver };
+        case ActionTypes.GAME_BOARD:
+            const { gameMatrix } = action;
+            return { ...state, gameMatrix };
         default:
             return state;
     }

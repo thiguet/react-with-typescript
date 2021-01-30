@@ -4,7 +4,7 @@
     background-color: black;
     border-radius: 20%;
     opacity: 0.5;
-    transition: all 0.3s ease;
+    transition: all 0.1s ease-in;
 }
 
 .Square.Snake {

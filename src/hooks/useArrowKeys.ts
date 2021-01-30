@@ -11,25 +11,25 @@ export const useArrowKeys = () => {
     const rightPress = useKeyPress('ArrowRight');
 
     useEffect(() => {
-        if (downPress) {
+        if (downPress && snakeDirection !== Direction.UP) {
             setSnakeDirection(Direction.DOWN);
         }
-    }, [downPress]);
+    }, [downPress, snakeDirection]);
     useEffect(() => {
-        if (upPress) {
+        if (upPress && snakeDirection !== Direction.DOWN) {
             setSnakeDirection(Direction.UP);
         }
-    }, [upPress]);
+    }, [upPress, snakeDirection]);
     useEffect(() => {
-        if (leftPress) {
+        if (leftPress && snakeDirection !== Direction.RIGHT) {
             setSnakeDirection(Direction.LEFT);
         }
-    }, [leftPress]);
+    }, [leftPress, snakeDirection]);
     useEffect(() => {
-        if (rightPress) {
+        if (rightPress && snakeDirection !== Direction.LEFT) {
             setSnakeDirection(Direction.RIGHT);
         }
-    }, [rightPress]);
+    }, [rightPress, snakeDirection]);
 
     return snakeDirection;
 };
